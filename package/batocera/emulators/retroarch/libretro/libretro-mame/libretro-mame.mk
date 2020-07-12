@@ -3,11 +3,9 @@
 # MAME
 #
 ################################################################################
-# Version: Commits on Apr 13, 2020 (0.220)
-LIBRETRO_MAME_VERSION = abca8f7ac5fe24ba7c29a75d6ebda591a20f61cd
-# LIBRETRO_MAME_SITE = $(call github,tcamargo,mame,$(LIBRETRO_MAME_VERSION))
+# Version: Commits on Jul 7, 2020 (0.222)
+LIBRETRO_MAME_VERSION = ff19c3a27bf4e144f93e9f443034a6ac6636fb61
 LIBRETRO_MAME_SITE = $(call github,libretro,mame,$(LIBRETRO_MAME_VERSION))
-# LIBRETRO_MAME_OVERRIDE_SRCDIR = /sources/mame
 LIBRETRO_MAME_LICENSE = MAME
 # install in staging for debugging (gdb)
 LIBRETRO_MAME_INSTALL_STAGING=YES

@@ -78,6 +78,7 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     select BR2_PACKAGE_BATOCERA_SCRIPTS                  # batocera scripts
     select BR2_PACKAGE_BATOCERA_AUDIO                    # batocera audio
     select BR2_PACKAGE_BATOCERA_BLUETOOTH                # batocera bluetooth
+    select BR2_PACKAGE_BATOCERA_NOTICE                   # boot pdf notice
     # choices: select BR2_PACKAGE_BATOCERA_SPLASH_OMXPLAYER if BR2_PACKAGE_BATOCERA_TARGET_RPI2      || BR2_PACKAGE_BATOCERA_TARGET_RPI3
     # choices: select BR2_PACKAGE_BATOCERA_SPLASH_FFPLAY    if BR2_PACKAGE_BATOCERA_TARGET_XU4  || BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64 || BR2_PACKAGE_BATOCERA_TARGET_ODROIDN2 || BR2_PACKAGE_BATOCERA_TARGET_TINKERBOARD || BR2_PACKAGE_BATOCERA_TARGET_MIQI || BR2_PACKAGE_BATOCERA_TARGET_ROCK960
     select BR2_PACKAGE_WGET                              # download tools
@@ -121,10 +122,13 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
                                                             BR2_PACKAGE_BATOCERA_TARGET_MIQI         || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_VIM3         || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5
+    select BR2_PACKAGE_BATOCERA_DRMINFO                  if BR2_PACKAGE_LIBDRM
 
     select BR2_PACKAGE_LIRC_TOOLS                        # lirc (remote control)
-    select BR2_PACKAGE_LIBCEC				 # libcec
-    select BR2_PACKAGE_XOW                               if !BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA # xbox receiver (require linux >= 4.5)
+    select BR2_PACKAGE_LIBCEC                            # libcec
+    select BR2_PACKAGE_XOW                               if !BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA && \
+                                                            !BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64
+                                                         # xbox receiver (require linux >= 4.5)
     select BR2_SYSTEM_ENABLE_NLS                         # locales
     select BR2_PACKAGE_ACPID                             if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
     select BR2_PACKAGE_BATOCERA_DESKTOPAPPS              if BR2_PACKAGE_XSERVER_XORG_SERVER # batocera applications config and scripts
@@ -179,14 +183,15 @@ config BR2_PACKAGE_BATOCERA_SYSTEM
     select BR2_PACKAGE_XBOXDRV if BR2_PACKAGE_BATOCERA_TARGET_905 || BR2_PACKAGE_BATOCERA_TARGET_912
 
     # wine tools
-    select BR2_PACKAGE_WINETRICKS if BR2_PACKAGE_WINE
-    select BR2_PACKAGE_LIBMSPACK  if BR2_PACKAGE_WINE
-    select BR2_PACKAGE_CABEXTRACT if BR2_PACKAGE_WINE
-    select BR2_PACKAGE_SQUASHFS   if BR2_PACKAGE_WINE
-    select BR2_PACKAGE_YAD        if BR2_PACKAGE_WINE
-    select BR2_PACKAGE_GSTREAMER1 if BR2_PACKAGE_WINE
-    select BR2_PACKAGE_GST1_LIBAV if BR2_PACKAGE_WINE
-    select BR2_PACKAGE_MONO       if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_WINETRICKS        if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_LIBMSPACK         if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_CABEXTRACT        if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_SQUASHFS          if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_YAD               if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_GSTREAMER1        if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_GST1_LIBAV        if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_GST1_PLUGINS_BASE if BR2_PACKAGE_WINE
+    select BR2_PACKAGE_GST1_PLUGINS_GOOD if BR2_PACKAGE_WINE
 
     # required gcc flags
     # required for different emulators, i suggest to enable it always to not have different behavior depending on boards
@@ -312,7 +317,8 @@ config BR2_PACKAGE_BATOCERA_ALL_SYSTEMS
 
         select BR2_PACKAGE_BATOCERA_MUPEN64     if !BR2_PACKAGE_BATOCERA_TARGET_RPI1 # mupen64 (n64)
 
-        select BR2_PACKAGE_FLYCAST              if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
+        select BR2_PACKAGE_FLYCAST              if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY || \
+                                                   BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY
 
         select BR2_PACKAGE_REICAST              if !BR2_PACKAGE_BATOCERA_TARGET_RPI1 && \
                                                    !BR2_PACKAGE_BATOCERA_TARGET_RPI2 && \
@@ -320,6 +326,7 @@ config BR2_PACKAGE_BATOCERA_ALL_SYSTEMS
                                                    !BR2_PACKAGE_BATOCERA_TARGET_C2   && \
                                                    !BR2_PACKAGE_BATOCERA_TARGET_ODROIDN2 && \
                                                    !BR2_PACKAGE_BATOCERA_TARGET_S905 && \
+                                                   !BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5 && \
                                                    !BR2_PACKAGE_BATOCERA_TARGET_VIM3
                                                    # dreamcast
 
@@ -401,6 +408,7 @@ config BR2_PACKAGE_BATOCERA_RETROARCH
                                                          !BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA && \
                                                          !BR2_PACKAGE_BATOCERA_TARGET_S905      && \
                                                          !BR2_PACKAGE_BATOCERA_TARGET_VIM3      && \
+                                                         !BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5 && \
                                                          !BR2_PACKAGE_BATOCERA_TARGET_S912
                                                          # PCFX
 
@@ -420,7 +428,7 @@ config BR2_PACKAGE_BATOCERA_RETROARCH
 
         select BR2_PACKAGE_LIBRETRO_BEETLE_SATURN     if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
         select BR2_PACKAGE_LIBRETRO_VICE              if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY || BR2_PACKAGE_BATOCERA_TARGET_RPI3 || BR2_PACKAGE_BATOCERA_TARGET_RPI4
-        select BR2_PACKAGE_LIBRETRO_MAME              if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY || BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64 || BR2_PACKAGE_BATOCERA_TARGET_TINKERBOARD || BR2_PACKAGE_BATOCERA_TARGET_MIQI || BR2_PACKAGE_BATOCERA_TARGET_ODROIDN2 || BR2_PACKAGE_BATOCERA_TARGET_XU4 || BR2_PACKAGE_BATOCERA_TARGET_ROCK960 || BR2_PACKAGE_BATOCERA_TARGET_VIM3
+        select BR2_PACKAGE_LIBRETRO_MAME              if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY || BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64 || BR2_PACKAGE_BATOCERA_TARGET_TINKERBOARD || BR2_PACKAGE_BATOCERA_TARGET_MIQI || BR2_PACKAGE_BATOCERA_TARGET_ODROIDN2 || BR2_PACKAGE_BATOCERA_TARGET_XU4 || BR2_PACKAGE_BATOCERA_TARGET_ROCK960 || BR2_PACKAGE_BATOCERA_TARGET_VIM3 || BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5
         select BR2_PACKAGE_LIBRETRO_KRONOS            if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
 
         select BR2_PACKAGE_LIBRETRO_YABASANSHIRO      if !BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY   && \
@@ -480,6 +488,7 @@ config BR2_PACKAGE_BATOCERA_RETROARCH
 
         select BR2_PACKAGE_LIBRETRO_DOSBOX            if !BR2_PACKAGE_BATOCERA_TARGET_ROCK960     && \
                                                          !BR2_PACKAGE_BATOCERA_TARGET_TINKERBOARD && \
+                                                         !BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5 && \
                                                          !BR2_PACKAGE_BATOCERA_TARGET_MIQI
 
         select BR2_PACKAGE_LIBRETRO_PUAE              if !BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA
@@ -506,7 +515,7 @@ config BR2_PACKAGE_BATOCERA_RETROARCH
         #select BR2_PACKAGE_RPCS3                     if BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL && BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
         #select BR2_PACKAGE_LIBRETRO_PPSSPP           if BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL && BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
         select BR2_PACKAGE_SUPERMODEL3                if BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL && BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
-        select BR2_PACKAGE_WINE                       if BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL && BR2_PACKAGE_BATOCERA_TARGET_X86
+        select BR2_PACKAGE_WINE                       if BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL && BR2_PACKAGE_BATOCERA_TARGET_X86_ANY
         select BR2_PACKAGE_WINE_X86                   if BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL && BR2_PACKAGE_BATOCERA_TARGET_X86_64
         # select BR2_PACKAGE_LIBRETRO_SCUMMVM         if BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL # Error starting
         # select BR2_PACKAGE_LIBRETRO_DAPHNE          if BR2_PACKAGE_BATOCERA_CORES_EXPERIMENTAL # Works fine but no sound, emulator bug
@@ -526,15 +535,15 @@ config BR2_PACKAGE_BATOCERA_MUPEN64
 
         select BR2_PACKAGE_MUPEN64PLUS_GLIDEN64         if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY      || \
                                                            BR2_PACKAGE_BATOCERA_TARGET_RPI4         || \
-                                                           BR2_PACKAGE_BATOCERA_TARGET_ROCKPRO64    || \
                                                            BR2_PACKAGE_BATOCERA_TARGET_VIM3         || \
                                                            BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5 || \
-                                                           BR2_PACKAGE_BATOCERA_TARGET_ROCK960
+                                                           BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY
                                                            # GLIDEN64
 
         select BR2_PACKAGE_MUPEN64PLUS_GLES2            if BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY      || \
                                                             BR2_PACKAGE_BATOCERA_TARGET_RPI4        || \
-                                                            BR2_PACKAGE_BATOCERA_TARGET_LIBRETECH_H5
+                                                            BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY
+
                                                             # GLES2
 
         select BR2_PACKAGE_MUPEN64PLUS_V20_GLIDEN64     if BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY
@@ -542,7 +551,8 @@ config BR2_PACKAGE_BATOCERA_MUPEN64
         select BR2_PACKAGE_MUPEN64PLUS_VIDEO_GLIDE64MK2 if !BR2_PACKAGE_BATOCERA_TARGET_RPI_ANY # GLIDE64MK2
 
         select BR2_PACKAGE_MUPEN64PLUS_VIDEO_RICE       if BR2_PACKAGE_BATOCERA_TARGET_X86_ANY || \
-                                                           BR2_PACKAGE_BATOCERA_TARGET_RPI3
+                                                           BR2_PACKAGE_BATOCERA_TARGET_RPI3 || \
+                                                           BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY
                                                            # RICE
         help
           Mupen64
@@ -559,7 +569,7 @@ config BR2_PACKAGE_BATOCERA_KODI
        select BR2_PACKAGE_GNUTLS            # https streams
 
        # Rockchip ffmpeg playback package
-       select BR2_PACKAGE_RKMPP             if BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY
+       select BR2_PACKAGE_ROCKCHIP_MPP      if BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY
 
        # ffmpeg enabler that i'm not sure it has an impact on kodi
        select BR2_PACKAGE_FFMPEG_GPL        # video recording
@@ -653,7 +663,7 @@ config BR2_PACKAGE_BATOCERA_KODI18
        select BR2_PACKAGE_GNUTLS            # https streams
 
        # Rockchip ffmpeg playback package
-       select BR2_PACKAGE_RKMPP             if BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY
+       select BR2_PACKAGE_ROCKCHIP_MPP      if BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY
 
        # ffmpeg enabler that i'm not sure it has an impact on kodi
        select BR2_PACKAGE_FFMPEG_GPL        # video recording

@@ -3,8 +3,8 @@
 # DOSBOX
 #
 ################################################################################
-# Version.: Commits on May 24, 2020
-LIBRETRO_DOSBOX_VERSION = 10e05343c044e7a1bd389a05be4a0b1d24480e5e
+# Version.: Commits on Jun 30, 2020
+LIBRETRO_DOSBOX_VERSION = 8ca7d6d16f0b1761e52e5b0a7a06354890dbac79
 LIBRETRO_DOSBOX_SITE = https://github.com/libretro/dosbox-svn.git
 LIBRETRO_DOSBOX_SITE_METHOD=git
 LIBRETRO_DOSBOX_GIT_SUBMODULES=YES
@@ -30,7 +30,7 @@ ifeq ($(BR2_aarch64),y)
 endif
 
 define LIBRETRO_DOSBOX_BUILD_CMDS
-	$(TARGET_CONFIGURE_OPTS) $(MAKE) CXX="$(TARGET_CXX)" CC="$(TARGET_CC)" -C $(@D)/libretro -f Makefile.libretro \
+	$(TARGET_CONFIGURE_OPTS) $(MAKE) CXX="$(TARGET_CXX)" CC="$(TARGET_CC)" cross_prefix="$(STAGING_DIR)/usr/bin/" -C $(@D)/libretro -f Makefile.libretro \
 		platform=$(BATOCERA_SYSTEM) $(LIBRETRO_DOSBOX_EXTRA_ARGS)
 endef
 

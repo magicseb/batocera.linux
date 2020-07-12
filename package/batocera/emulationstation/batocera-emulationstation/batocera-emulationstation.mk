@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-BATOCERA_EMULATIONSTATION_VERSION = a023f28510fb79a3750d93f3cf6f8c82193df575
+BATOCERA_EMULATIONSTATION_VERSION = f2444e53532938301732680bec45e9cc776c77ca
 BATOCERA_EMULATIONSTATION_SITE = https://github.com/batocera-linux/batocera-emulationstation
 BATOCERA_EMULATIONSTATION_SITE_METHOD = git
 BATOCERA_EMULATIONSTATION_LICENSE = MIT
@@ -13,16 +13,23 @@ BATOCERA_EMULATIONSTATION_LICENSE = MIT, Apache-2.0
 BATOCERA_EMULATIONSTATION_DEPENDENCIES = sdl2 sdl2_mixer libfreeimage freetype alsa-lib libcurl vlc rapidjson
 # install in staging for debugging (gdb)
 BATOCERA_EMULATIONSTATION_INSTALL_STAGING = YES
+# BATOCERA_EMULATIONSTATION_OVERRIDE_SRCDIR = /sources/batocera-emulationstation
 
 ifeq ($(BR2_PACKAGE_HAS_LIBGL),y)
 BATOCERA_EMULATIONSTATION_DEPENDENCIES += libgl
+BATOCERA_EMULATIONSTATION_CONF_OPTS += -DGL=1
+else
+BATOCERA_EMULATIONSTATION_CONF_OPTS += -DGL=0
 endif
 
 ifeq ($(BR2_PACKAGE_HAS_LIBGLES),y)
 BATOCERA_EMULATIONSTATION_DEPENDENCIES += libgles
+BATOCERA_EMULATIONSTATION_CONF_OPTS += -DGLES=1
+else
+BATOCERA_EMULATIONSTATION_CONF_OPTS += -DGLES=0
 endif
 
-BATOCERA_EMULATIONSTATION_CONF_OPTS += -D_$(call UPPERCASE,$(BATOCERA_SYSTEM_ARCH))=1
+BATOCERA_EMULATIONSTATION_CONF_OPTS += -DCMAKE_CXX_FLAGS=-D$(call UPPERCASE,$(BATOCERA_SYSTEM_ARCH))
 
 ifeq ($(BR2_PACKAGE_HAS_LIBGLES),y)
 	BATOCERA_EMULATIONSTATION_CONF_OPTS += -DGLES=ON
@@ -46,9 +53,9 @@ else
 endif
 
 # cec is causing issues with es on xu4 and vim3
-ifeq ($(BR2_PACKAGE_LIBCEC_EXYNOS_API)$(BR2_PACKAGE_BATOCERA_TARGET_VIM3),y)
-	BATOCERA_EMULATIONSTATION_CONF_OPTS += -DCEC=OFF
-endif
+#ifeq ($(BR2_PACKAGE_LIBCEC_EXYNOS_API)$(BR2_PACKAGE_BATOCERA_TARGET_VIM3),y)
+BATOCERA_EMULATIONSTATION_CONF_OPTS += -DCEC=OFF
+#endif
 
 define BATOCERA_EMULATIONSTATION_RPI_FIXUP
 	$(SED) 's|.{CMAKE_FIND_ROOT_PATH}/opt/vc|$(STAGING_DIR)/usr|g' $(@D)/CMakeLists.txt
@@ -58,9 +65,11 @@ endef
 define BATOCERA_EMULATIONSTATION_RESOURCES
 	$(INSTALL) -m 0755 -d $(TARGET_DIR)/usr/share/emulationstation/resources/help
 	$(INSTALL) -m 0755 -d $(TARGET_DIR)/usr/share/emulationstation/resources/flags
+	$(INSTALL) -m 0755 -d $(TARGET_DIR)/usr/share/emulationstation/resources/battery
 	$(INSTALL) -m 0644 -D $(@D)/resources/*.* $(TARGET_DIR)/usr/share/emulationstation/resources
 	$(INSTALL) -m 0644 -D $(@D)/resources/help/*.* $(TARGET_DIR)/usr/share/emulationstation/resources/help
 	$(INSTALL) -m 0644 -D $(@D)/resources/flags/*.* $(TARGET_DIR)/usr/share/emulationstation/resources/flags
+	$(INSTALL) -m 0644 -D $(@D)/resources/battery/*.* $(TARGET_DIR)/usr/share/emulationstation/resources/battery
 
 	# es_input.cfg
 	mkdir -p $(TARGET_DIR)/usr/share/batocera/datainit/system/configs/emulationstation

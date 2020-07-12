@@ -3,7 +3,7 @@ DL_DIR      ?= $(PROJECT_DIR)/dl
 OUTPUT_DIR  ?= $(PROJECT_DIR)/output
 CCACHE_DIR  ?= $(PROJECT_DIR)/buildroot-ccache
 LOCAL_MK	?= $(PROJECT_DIR)/batocera.mk
-EXTRA_PKGS  ?=
+EXTRA_PKGS	?=
 
 -include $(LOCAL_MK)
 
@@ -127,6 +127,26 @@ ccache-dir:
 %-tail: output-dir-%
 	@tail -F $(OUTPUT_DIR)/$*/build/build-time.log
 
-%-toolchain: %-config
+%-snapshot:
+	$(if $(shell which btrfs 2>/dev/null),, $(error "btrfs not found!"))
+	@sudo btrfs sub del $(OUTPUT_DIR)/snapshots/$*-toolchain
+		@btrfs subvolume snapshot -r $(OUTPUT_DIR)/$* $(OUTPUT_DIR)/snapshots/$*-toolchain
+
+%-rollback:
+	$(if $(shell which btrfs 2>/dev/null),, $(error "btrfs not found!"))
+	-@sudo btrfs sub del $(OUTPUT_DIR)/$*
+	@btrfs subvolume snapshot $(OUTPUT_DIR)/snapshots/$*-toolchain $(OUTPUT_DIR)/$*
+
+%-flash:
+	$(if $(DEV),,$(error "DEV not specified!"))
+	@gzip -dc $(OUTPUT_DIR)/$*/images/batocera/batocera-*.img.gz | sudo dd of=$(DEV) bs=5M status=progress
+	@sync
+
+%-toolchain:
+	$(if $(shell which btrfs 2>/dev/null),, $(error "btrfs not found!"))
+	-@sudo btrfs sub del $(OUTPUT_DIR)/$*
+	@btrfs subvolume create $(OUTPUT_DIR)/$*
+	@$(MAKE) $*-config
 	@$(MAKE) $*-build CMD=toolchain
 	@$(MAKE) $*-build CMD=llvm
+	@$(MAKE) $*-snapshot
