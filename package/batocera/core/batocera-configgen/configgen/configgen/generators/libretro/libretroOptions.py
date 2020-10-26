@@ -3,6 +3,7 @@ import sys
 import os
 import ConfigParser
 from settings.unixSettings import UnixSettings
+import batoceraFiles
 
 def generateCoreSettings(retroarchCore, system):
     # retroarch-core-options.cfg
@@ -43,7 +44,12 @@ def generateCoreSettings(retroarchCore, system):
             coreSettings.save('bluemsx_msxtype', '"MSX2+"')
         elif (system.name == 'msxturbor'):
             coreSettings.save('bluemsx_msxtype', '"MSXturboR"')
-        
+
+    if (system.config['core'] == 'citra'):
+        if not os.path.exists(batoceraFiles.CONF + "/retroarch/3ds.cfg"):
+            f = open(batoceraFiles.CONF + "/retroarch/3ds.cfg", "w")
+            f.write("video_driver = \"glcore\"\n")
+            f.close()
 
     if (system.config['core'] == 'tgbdual'):
         coreSettings.save('tgbdual_audio_output',       '"Game Boy #1"')
@@ -61,6 +67,21 @@ def generateCoreSettings(retroarchCore, system):
 
     if (system.config['core'] == 'desmume'):
         coreSettings.save('desmume_pointer_device_r',   '"emulated"')
+        # multisampling aa
+        if system.isOptSet('multisampling'):
+            coreSettings.save("desmume_gfx_multisampling", system.config["multisampling"])
+        else:
+            coreSettings.save("desmume_gfx_multisampling", "disabled")
+        # texture smoothing
+        if system.isOptSet('texture_smoothing'):
+            coreSettings.save("desmume_gfx_texture_smoothing", system.config["texture_smoothing"])
+        else:
+            coreSettings.save("desmume_gfx_texture_smoothing", "disabled")
+        # texture scaling (xBrz)
+        if system.isOptSet('texture_scaling'):
+            coreSettings.save("desmume_gfx_texture_scaling", system.config["texture_scaling"])
+        else:
+            coreSettings.save("desmume_gfx_texture_scaling", "1")
 
     if (system.config['core'] == 'mame078'):
         coreSettings.save('mame2003_skip_disclaimer',   '"enabled"')
@@ -108,12 +129,49 @@ def generateCoreSettings(retroarchCore, system):
 
     if (system.config['core'] == 'flycast'):
         coreSettings.save('reicast_threaded_rendering',   '"enabled"')
+        # widescreen hack
+        if system.isOptSet('widescreen_hack'):
+            coreSettings.save("reicast_widescreen_hack", system.config["widescreen_hack"])
+        else:
+            coreSettings.save("reicast_widescreen_hack", "disabled")
+        # anisotropic filtering
+        if system.isOptSet('anisotropic_filtering'):
+            coreSettings.save("reicast_anisotropic_filtering", system.config["anisotropic_filtering"])
+        else:
+            coreSettings.save("reicast_anisotropic_filtering", "off")
+        # texture upscaling (xBRZ)
+        if system.isOptSet('texture_upscaling'):
+            coreSettings.save("reicast_texupscale", system.config["texture_upscaling"])
+        else:
+            coreSettings.save("reicast_texupscale", "off")
+        # render to texture upscaling
+        if system.isOptSet('render_to_texture_upscaling'):
+            coreSettings.save("reicast_render_to_texture_upscaling", system.config["render_to_texture_upscaling"])
+        else:
+            coreSettings.save("reicast_render_to_texture_upscaling", "1x")
 
     if (system.config['core'] == 'dosbox'):
         coreSettings.save('dosbox_svn_pcspeaker', '"true"')
 
     if (system.config['core'] == 'px68k'):
         coreSettings.save('px68k_disk_path', '"disabled"')
+
+    if (system.config['core'] == 'mednafen_psx'):
+        # internal resolution
+        if system.isOptSet('internal_resolution'):
+            coreSettings.save("beetle_psx_hw_internal_resolution", system.config["internal_resolution"])
+        else:
+            coreSettings.save("beetle_psx_hw_internal_resolution", "1x(native)")
+        # texture filtering
+        if system.isOptSet('texture_filtering'):
+            coreSettings.save("beetle_psx_hw_filter", system.config["texture_filtering"])
+        else:
+            coreSettings.save("beetle_psx_hw_filter", "nearest")
+        # widescreen hack
+        if system.isOptSet('widescreen_hack'):
+            coreSettings.save("beetle_psx_hw_widescreen_hack", system.config["widescreen_hack"])
+        else:
+            coreSettings.save("beetle_psx_hw_widescreen_hack", "disabled")
 
     if (system.config['core'] == 'pcsx_rearmed'):
         for n in range(1, 8+1):
@@ -133,6 +191,8 @@ def generateCoreSettings(retroarchCore, system):
     for user_config in system.config:
         if user_config[:14] == "retroarchcore.":
             coreSettings.save(user_config[14:], system.config[user_config])
+
+    coreSettings.write()
 
 
 def generateHatariConf(hatariConf):

@@ -20,8 +20,8 @@ ifeq ($(BR2_PACKAGE_XORG7),y)
   BATOCERA_SCRIPT_RESOLUTION_TYPE=xorg
 endif
 
-# doesn't work on odroidgoa with mali g31_gbm
-ifeq ($(BR2_PACKAGE_MALI_G31_GBM),y)
+# doesn't work on odroidgoa with mali g31_gbm and rockpro64 and mali rk450
+ifeq ($(BR2_PACKAGE_MALI_G31_GBM)$(BR2_PACKAGE_MALI_RK450),y)
   BATOCERA_SCRIPT_RESOLUTION_TYPE=basic
 endif
 
@@ -65,21 +65,12 @@ define BATOCERA_SCRIPTS_INSTALL_XORG
 	install -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-scripts/scripts/batocera-record $(TARGET_DIR)/usr/bin/
 endef
 
-define BATOCERA_SCRIPTS_INSTALL_WINE
-	ln -fs /userdata/system/99-nvidia.conf $(TARGET_DIR)/etc/X11/xorg.conf.d/99-nvidia.conf
-	install -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-scripts/scripts/batocera-wine $(TARGET_DIR)/usr/bin/
-endef
-
 define BATOCERA_SCRIPTS_INSTALL_ROCKCHIP
 	install -m 0755 $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/core/batocera-scripts/scripts/batocera-rockchip-suspend $(TARGET_DIR)/usr/bin/
 endef
 
 ifeq ($(BR2_PACKAGE_XSERVER_XORG_SERVER),y)
   BATOCERA_SCRIPTS_POST_INSTALL_TARGET_HOOKS += BATOCERA_SCRIPTS_INSTALL_XORG
-endif
-
-ifeq ($(BR2_PACKAGE_WINE),y)
-  BATOCERA_SCRIPTS_POST_INSTALL_TARGET_HOOKS += BATOCERA_SCRIPTS_INSTALL_WINE
 endif
 
 ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ROCKCHIP_ANY),y)

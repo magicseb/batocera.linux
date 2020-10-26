@@ -52,7 +52,12 @@ then
 fi
 if test -e "${TARGET_DIR}/etc/init.d/S45connman"
 then
-    mv "${TARGET_DIR}/etc/init.d/S45connman" "${TARGET_DIR}/etc/init.d/S08connman" || exit 1 # move to make before share
+    if test -e "${TARGET_DIR}/etc/init.d/S08connman"
+    then
+	rm -f "${TARGET_DIR}/etc/init.d/S45connman" || exit 1
+    else
+	mv "${TARGET_DIR}/etc/init.d/S45connman" "${TARGET_DIR}/etc/init.d/S08connman" || exit 1 # move to make before share
+    fi
 fi
 if test -e "${TARGET_DIR}/etc/init.d/S21rngd"
 then
@@ -82,14 +87,6 @@ then
     ln -sf "/usr/lib/gdk-pixbuf-2.0" "${TARGET_DIR}/lib/gdk-pixbuf-2.0" || exit 1
 fi
 
-# fix s905 mali driver
-if test "${BATOCERA_TARGET}" = "S905"
-then
-    mkdir -p "${TARGET_DIR}/lib/modules/3.14.29/kernel/gpu"
-    cp "${BR2_EXTERNAL_BATOCERA_PATH}/board/batocera/s905/linux_patches/mali.ko" "${TARGET_DIR}/lib/modules/3.14.29/kernel/gpu/mali.ko"
-    ln -sf "/usr/lib/gdk-pixbuf-2.0" "${TARGET_DIR}/lib/gdk-pixbuf-2.0" || exit 1
-fi
-
 # timezone
 # file generated from the output directory and compared to https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
 # because i don't know how to list correctly them
@@ -102,3 +99,9 @@ sed -i -e s+'defaults.pcm.ipc_gid .*$'+'defaults.pcm.ipc_gid '"${AUDIOGROUP}"+ "
 
 # bios file
 python "${BR2_EXTERNAL_BATOCERA_PATH}/package/batocera/core/batocera-scripts/scripts/batocera-systems" --createReadme > "${TARGET_DIR}/usr/share/batocera/datainit/bios/readme.txt" || exit 1
+
+# enable serial console
+SYSTEM_GETTY_PORT=$(grep "BR2_TARGET_GENERIC_GETTY_PORT" "${BR2_CONFIG}" | sed 's/.*\"\(.*\)\"/\1/')
+SYSTEM_GETTY_BAUDRATE=$(grep -E "^BR2_TARGET_GENERIC_GETTY_BAUDRATE_[0-9]*=y$" "${BR2_CONFIG}" | sed -e s+'^BR2_TARGET_GENERIC_GETTY_BAUDRATE_\([0-9]*\)=y$'+'\1'+)
+sed -i -e '/# GENERIC_SERIAL$/s~^.*#~S0::respawn:/sbin/getty -L '${SYSTEM_GETTY_PORT}' '${SYSTEM_GETTY_BAUDRATE}' vt100 #~' \
+    ${TARGET_DIR}/etc/inittab

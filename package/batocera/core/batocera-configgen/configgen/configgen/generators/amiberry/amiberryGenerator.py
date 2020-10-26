@@ -50,6 +50,7 @@ class AmiberryGenerator(Generator):
 
             # controller
             libretroControllers.writeControllersConfig(retroconfig, system, playersControllers)
+            retroconfig.write()
 
             if not os.path.exists(batoceraFiles.amiberryRetroarchInputsDir):
                 os.makedirs(batoceraFiles.amiberryRetroarchInputsDir)

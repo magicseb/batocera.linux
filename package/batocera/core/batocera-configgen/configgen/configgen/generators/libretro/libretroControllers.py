@@ -97,8 +97,12 @@ def generateControllerConfig(controller, retroarchspecials, system):
         jsvalue = retroarchjoysticks[jskey]
         if jskey in controller.inputs:
             input = controller.inputs[jskey]
-            config['input_player%s_%s_minus_axis' % (controller.player, jsvalue)] = '-%s' % input.id
-            config['input_player%s_%s_plus_axis' % (controller.player, jsvalue)] = '+%s' % input.id
+            if input.value == '-1':
+                config['input_player%s_%s_minus_axis' % (controller.player, jsvalue)] = '-%s' % input.id
+                config['input_player%s_%s_plus_axis' % (controller.player, jsvalue)] = '+%s' % input.id
+            else:
+                config['input_player%s_%s_minus_axis' % (controller.player, jsvalue)] = '+%s' % input.id
+                config['input_player%s_%s_plus_axis' % (controller.player, jsvalue)] = '-%s' % input.id
     if controller.player == '1':
         specialMap = retroarchspecials
         for specialkey in specialMap:
@@ -129,7 +133,7 @@ def getConfigValue(input):
 # return the retroarch analog_dpad_mode
 def getAnalogMode(controller, system):
     # don't enable analog as hat mode for some systems
-    if system.name == 'n64' or system.name == 'dreamcast':
+    if system.name == 'n64' or system.name == 'dreamcast' or system.name == '3ds':
         return '0'
 
     for dirkey in retroarchdirs:

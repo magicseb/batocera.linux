@@ -96,6 +96,9 @@ neogeocd:
 mame:
   emulator: libretro
   core:     mame078plus
+hbmame:
+  emulator: libretro
+  core:     hbmame
 fbneo:
   emulator: libretro
   core:     fbneo
@@ -220,6 +223,9 @@ prboom:
 mrboom:
   emulator: libretro
   core:     mrboom
+cannonball:
+  emulator: cannonball
+  core:     cannonball
 psx:
   emulator: libretro
   core:     pcsx_rearmed
@@ -230,10 +236,8 @@ imageviewer:
   emulator: libretro
   core:     imageviewer
 scummvm:
-  emulator: scummvm
-  core: scummvm
-  options:
-    videomode: default
+  emulator: libretro
+  core:     scummvm
 colecovision:
   emulator: libretro
   core:     bluemsx
@@ -295,4 +299,9 @@ windows:
 windows_installers:
   emulator: wine
   core:     wine
-
+wiiu:
+  emulator: cemu
+  core:     cemu
+ps3:
+  emulator: rpcs3
+  core:     rpcs3

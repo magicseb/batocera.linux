@@ -159,13 +159,13 @@ def generateControllerConfig_emulatedwiimotes(playersControllers, rom):
 
 def generateControllerConfig_gamecube(playersControllers,rom):
     gamecubeMapping = {
-        'y':      'Buttons/X',  'b':        'Buttons/A',
-        'x':      'Buttons/Y',  'a':        'Buttons/B',
+        'y':      'Buttons/B',  'b':        'Buttons/A',
+        'x':      'Buttons/Y',  'a':        'Buttons/X',
         'r2':     'Buttons/Z',  'start':    'Buttons/Start',
         'pageup': 'Triggers/L', 'pagedown': 'Triggers/R',
         'up': 'D-Pad/Up', 'down': 'D-Pad/Down', 'left': 'D-Pad/Left', 'right': 'D-Pad/Right',
         'joystick1up': 'Main Stick/Up', 'joystick1left': 'Main Stick/Left',
-        'joystick2up': 'C-Stick/Up',    'joystick2left': 'C-Stick/Left'
+        'joystick2up': 'C-Stick/Up',    'joystick2left': 'C-Stick/Left', 'hotkey': 'Buttons/Hotkey'
     }
     gamecubeReverseAxes = {
         'Main Stick/Up':   'Main Stick/Down',
