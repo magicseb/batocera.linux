@@ -3,8 +3,8 @@
 # PROSYSTEM
 #
 ################################################################################
-# Version.: Commits on Jan 06, 2020
-LIBRETRO_PROSYSTEM_VERSION = 6f7e34aea89db5ba2fbf674e5ff0ad6fc68a198e
+# Version.: Commits on Mar 25, 2021
+LIBRETRO_PROSYSTEM_VERSION = 2f8bf387d665dea43e442d36b8a3a40f4d39574b
 LIBRETRO_PROSYSTEM_SITE = $(call github,libretro,prosystem-libretro,$(LIBRETRO_PROSYSTEM_VERSION))
 LIBRETRO_PROSYSTEM_LICENSE = GPLv2
 
@@ -14,8 +14,14 @@ ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI3),y)
 	LIBRETRO_PROSYSTEM_PLATFORM = rpi3
 endif
 
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
-	LIBRETRO_PROSYSTEM_PLATFORM = classic_armv8_a35
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S812),y)
+        LIBRETRO_PROSYSTEM_PLATFORM = armv
+endif
+
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_RPI4),y)
+LIBRETRO_PROSYSTEM_PLATFORM = rpi4
+else ifeq ($(BR2_aarch64),y)
+LIBRETRO_PROSYSTEM_PLATFORM = unix
 endif
 
 define LIBRETRO_PROSYSTEM_BUILD_CMDS

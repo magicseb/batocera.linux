@@ -19,21 +19,24 @@ class AmiberryGenerator(Generator):
             os.makedirs(dirname(batoceraFiles.amiberryRetroarchCustom))
         
         romType = self.getRomType(rom)
-        eslog.log("romType"+romType)
+        eslog.log("romType: "+romType)
         if romType != 'UNKNOWN' :           
             commandArray = [ batoceraFiles.batoceraBins[system.config['emulator']], "-G" ]
             if romType != 'WHDL' :
-                commandArray.append("-model=" + system.config['core'])
+                commandArray.append("--model")
+                commandArray.append(system.config['core'])
             
             if romType == 'WHDL' :
-                commandArray.append("-autoload="+rom)
+                commandArray.append("--autoload")
+                commandArray.append(rom)
             elif romType == 'HDF' :
                 commandArray.append("-s")
                 commandArray.append("hardfile2=rw,DH0:"+rom+",32,1,2,512,0,,uae0")
                 commandArray.append("-s")
                 commandArray.append("uaehf0=hdf,rw,DH0:"+rom+",32,1,2,512,0,,uae0")
             elif romType == 'CD' :
-                commandArray.append("-cdimage="+rom)
+                commandArray.append("--cdimage")
+                commandArray.append(rom)
             elif romType == 'DISK':
                 # floppies
                 n = 0
@@ -62,7 +65,7 @@ class AmiberryGenerator(Generator):
                 playerInputFilename = batoceraFiles.amiberryRetroarchInputsDir + "/" + padfilename + ".cfg"
                 with open(batoceraFiles.amiberryRetroarchCustom) as infile, open(playerInputFilename, 'w') as outfile:
                     for line in infile:
-                        for src, target in replacements.iteritems():
+                        for src, target in replacements.items():
                             newline = line.replace(src, target)
                             if not newline.isspace():
                                 outfile.write(newline)
@@ -92,6 +95,8 @@ class AmiberryGenerator(Generator):
 
             os.chdir("/usr/share/amiberry")
             return Command.Command(array=commandArray)
+        # otherwise, unknown format
+        return Command.Command(array=[])
 
     def floppiesFromRom(self, rom):
         floppies = []
@@ -153,6 +158,9 @@ class AmiberryGenerator(Generator):
                         extension = os.path.splitext(zipfilename)[1][1:]
                         if extension == "info":
                             return 'WHDL'
+                        elif extension == 'lha' :
+                            eslog.log("Amiberry doesn't support .lha inside a .zip")
+                            return 'UNKNOWN'
                         elif extension == 'adf' :
                             return 'DISK'
             # no info or adf file found

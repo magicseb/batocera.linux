@@ -2,7 +2,7 @@
 import sys
 import os
 import batoceraFiles
-import ConfigParser
+import configparser
 from settings.unixSettings import UnixSettings
 
 def generateRetroarchCustom():
@@ -47,7 +47,7 @@ def generateRetroarchCustom():
     retroarchSettings.save('video_shader_enable',               '"false"')
     
     # Audio
-    retroarchSettings.save('audio_volume',                       '"8.0"')
+    retroarchSettings.save('audio_volume',                       '"2.0"')
     
     # Settings
     retroarchSettings.save('global_core_options',               '"true"')
@@ -63,7 +63,7 @@ def generateRetroarchCustom():
     retroarchSettings.save('rgui_show_start_screen',            '"false"')
 
     # Enable usage of OSD messages (Text messages not in badge)
-    retroarchSettings.save('video_font_enable',                 '"false"')
+    retroarchSettings.save('video_font_enable',                 '"true"')
 
     # Take a screenshot of the savestate
     retroarchSettings.save('savestate_thumbnail_enable',        '"true"')
@@ -73,6 +73,9 @@ def generateRetroarchCustom():
 
     # Show badges in Retroarch cheevos list
     retroarchSettings.save('cheevos_badges_enable',             '"true"')
+
+    # Disable builtin image viewer (done in ES, and prevents from loading pico-8 .png carts)
+    retroarchSettings.save('builtin_imageviewer_enable',        '"false"')
 
     retroarchSettings.write()
 

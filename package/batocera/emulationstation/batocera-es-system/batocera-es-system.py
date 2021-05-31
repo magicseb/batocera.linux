@@ -12,27 +12,38 @@ import shutil
 from collections import OrderedDict
 from operator import itemgetter
 
+def ordered_load(stream, Loader=yaml.Loader, object_pairs_hook=OrderedDict):
+    class OrderedLoader(Loader):
+        pass
+    def construct_mapping(loader, node):
+        loader.flatten_mapping(node)
+        return object_pairs_hook(loader.construct_pairs(node))
+    OrderedLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+        construct_mapping)
+    return yaml.load(stream, OrderedLoader)
+
 class EsSystemConf:
 
     default_parentpath = "/userdata/roms"
-    default_command    = "python /usr/lib/python2.7/site-packages/configgen/emulatorlauncher.py %CONTROLLERSCONFIG% -system %SYSTEM% -rom %ROM%"
+    default_command    = "python /usr/lib/python3.9/site-packages/configgen/emulatorlauncher.py %CONTROLLERSCONFIG% -system %SYSTEM% -rom %ROM%"
 
     # Generate the es_systems.cfg file by searching the information in the es_system.yml file
     @staticmethod
-    def generate(rulesYaml, featuresYaml, configFile, esSystemFile, esFeaturesFile, systemsConfigFile, archSystemsConfigFile, romsdirsource, romsdirtarget):
-        rules = yaml.safe_load(file(rulesYaml, "r"))
+    def generate(rulesYaml, featuresYaml, configFile, esSystemFile, esFeaturesFile, systemsConfigFile, archSystemsConfigFile, romsdirsource, romsdirtarget, arch):
+        rules = yaml.safe_load(open(rulesYaml, "r"))
         config = EsSystemConf.loadConfig(configFile)
         es_system = ""
 
-        archSystemsConfig = yaml.safe_load(file(archSystemsConfigFile, "r"))
-        systemsConfig     = yaml.safe_load(file(systemsConfigFile, "r"))
+        archSystemsConfig = yaml.safe_load(open(archSystemsConfigFile, "r"))
+        systemsConfig     = yaml.safe_load(open(systemsConfigFile, "r"))
 
         es_system += "<?xml version=\"1.0\"?>\n"
         es_system += "<systemList>\n"
         # sort to be determinist
         sortedRules = sorted(rules)
 
-        print "generating the " + esSystemFile + " file..."
+        print("generating the " + esSystemFile + " file...")
         for system in sortedRules:
             # compute default emulator/cores
             defaultCore = None
@@ -53,19 +64,19 @@ class EsSystemConf:
             es_system += EsSystemConf.generateSystem(system, data, config, defaultEmulator, defaultCore)
         es_system += "</systemList>\n"
         EsSystemConf.createEsSystem(es_system, esSystemFile)
-        EsSystemConf.createEsFeatures(featuresYaml, rules, esFeaturesFile)
+        EsSystemConf.createEsFeatures(featuresYaml, rules, esFeaturesFile, arch)
 
-        print "removing the " + romsdirtarget + " folder..."
+        print("removing the " + romsdirtarget + " folder...")
         if os.path.isdir(romsdirtarget):
             shutil.rmtree(romsdirtarget)
-        print "generating the " + romsdirtarget + " folder..."
+        print("generating the " + romsdirtarget + " folder...")
         for system in sortedRules:
             if rules[system]:
                 if EsSystemConf.needFolder(system, rules[system], config):
                     EsSystemConf.createFolders(system, rules[system], romsdirsource, romsdirtarget)
                     EsSystemConf.infoSystem(system, rules[system], romsdirtarget)
                 else:
-                    print "skipping directory for system " + system
+                    print("skipping directory for system " + system)
 
     # check if the folder is required
     @staticmethod
@@ -103,7 +114,7 @@ class EsSystemConf:
 
         pathValue      = EsSystemConf.systemPath(system, data)
         platformValue  = EsSystemConf.systemPlatform(system, data)
-        listExtensions = EsSystemConf.listExtension(data, True)
+        listExtensions = EsSystemConf.listExtension(data, False)
         groupValue     = EsSystemConf.systemGroup(system, data)
         command        = EsSystemConf.commandName(data)
 
@@ -113,18 +124,17 @@ class EsSystemConf:
         systemTxt += "        <manufacturer>%s</manufacturer>\n" % (data["manufacturer"])
         systemTxt += "        <release>%s</release>\n" % (data["release"])
         systemTxt += "        <hardware>%s</hardware>\n" % (data["hardware"])
-        if pathValue != "":
-            systemTxt += "        <path>%s</path>\n"           % (pathValue)
         if listExtensions != "":
+            if pathValue != "":
+                systemTxt += "        <path>%s</path>\n"           % (pathValue)
             systemTxt += "        <extension>%s</extension>\n" % (listExtensions)
-        systemTxt += "        <command>%s</command>\n"     % (command)
+            systemTxt += "        <command>%s</command>\n"     % (command)
         if platformValue != "":
             systemTxt += "        <platform>%s</platform>\n"   % (platformValue)
         systemTxt += "        <theme>%s</theme>\n"         % (EsSystemConf.themeName(system, data))
         if groupValue != "":
             systemTxt += "        <group>%s</group>\n" % (groupValue)        
-        if not("includeEmulators" in data and data["includeEmulators"] is False):
-            systemTxt += listEmulatorsTxt
+        systemTxt += listEmulatorsTxt
         systemTxt += "  </system>\n"
         return systemTxt
 
@@ -214,7 +224,7 @@ class EsSystemConf:
         arqtxt = romsdir + "/" + subdir + "/" + "_info.txt"
 
         systemsInfo = open(arqtxt, 'w')
-        systemsInfo.write(infoTxt.encode('utf-8'))
+        systemsInfo.write(infoTxt)
         systemsInfo.close()
 
     # Writes the information in the es_systems.cfg file
@@ -226,8 +236,8 @@ class EsSystemConf:
 
     # Write the information in the es_features.cfg file
     @staticmethod
-    def createEsFeatures(featuresYaml, systems, esFeaturesFile):
-        features = yaml.safe_load(file(featuresYaml, "r"))
+    def createEsFeatures(featuresYaml, systems, esFeaturesFile, arch):
+        features = ordered_load(open(featuresYaml, "r"))
         es_features = open(esFeaturesFile, "w")
         featuresTxt = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
         featuresTxt += "<features>\n"
@@ -238,9 +248,7 @@ class EsSystemConf:
                     if emulator_featuresTxt != "":
                         emulator_featuresTxt += ", "
                     emulator_featuresTxt += feature
-                featuresTxt += "  <emulator name=\"{}\" features=\"{}\"".format(emulator, emulator_featuresTxt)
-            else:
-                featuresTxt += "  <emulator name=\"{}\"".format(emulator)
+            featuresTxt += "  <emulator name=\"{}\" features=\"{}\"".format(emulator, emulator_featuresTxt)
 
             if "cores" in features[emulator] or "systems" in features[emulator] or "cfeatures" in features[emulator]:
                 featuresTxt += ">\n"
@@ -253,7 +261,52 @@ class EsSystemConf:
                                 if core_featuresTxt != "":
                                     core_featuresTxt += ", "
                                 core_featuresTxt += feature
-                        featuresTxt += "      <core name=\"{}\" features=\"{}\" />\n".format(core, core_featuresTxt)
+                        if "cfeatures" in features[emulator]["cores"][core] or "systems" in features[emulator]["cores"][core]:
+                            featuresTxt += "      <core name=\"{}\" features=\"{}\">\n".format(core, core_featuresTxt)
+                            # core features
+                            if "cfeatures" in features[emulator]["cores"][core]:
+                               for cfeature in features[emulator]["cores"][core]["cfeatures"]:
+                                   if "archs_include" not in features[emulator]["cores"][core]["cfeatures"][cfeature] or arch in features[emulator]["cores"][core]["cfeatures"][cfeature]["archs_include"]:
+                                       description = ""
+                                       if "description" in features[emulator]["cores"][core]["cfeatures"][cfeature]:
+                                           description = features[emulator]["cores"][core]["cfeatures"][cfeature]["description"]
+                                       featuresTxt += "        <feature name=\"{}\" value=\"{}\" description=\"{}\">\n".format(features[emulator]["cores"][core]["cfeatures"][cfeature]["prompt"], cfeature, description)
+                                       for choice in features[emulator]["cores"][core]["cfeatures"][cfeature]["choices"]:
+                                           featuresTxt += "          <choice name=\"{}\" value=\"{}\" />\n".format(choice, features[emulator]["cores"][core]["cfeatures"][cfeature]["choices"][choice])
+                                       featuresTxt += "        </feature>\n"
+                                   else:
+                                       print("skipping core " + emulator + "/" + core + " cfeature " + cfeature)
+                            # #############
+
+                            # systems in cores/core
+                            if "systems" in features[emulator]["cores"][core]:
+                               featuresTxt += "        <systems>\n"
+                               for system in features[emulator]["cores"][core]["systems"]:
+                                   system_featuresTxt = ""
+                                   if "features" in features[emulator]["cores"][core]["systems"][system]:
+                                       for feature in features[emulator]["cores"][core]["systems"][system]["features"]:
+                                           if system_featuresTxt != "":
+                                               system_featuresTxt += ", "
+                                           system_featuresTxt += feature
+                                   featuresTxt += "          <system name=\"{}\" features=\"{}\" >\n".format(system, system_featuresTxt)
+                                   if "cfeatures" in features[emulator]["cores"][core]["systems"][system]:
+                                       for cfeature in features[emulator]["cores"][core]["systems"][system]["cfeatures"]:
+                                           if "archs_include" not in features[emulator]["cores"][core]["systems"][system]["cfeatures"][cfeature] or arch in features[emulator]["cores"][core]["systems"][system]["cfeatures"][cfeature]["archs_include"]:
+                                               description = ""
+                                               if "description" in features[emulator]["cores"][core]["systems"][system]["cfeatures"][cfeature]:
+                                                   description = features[emulator]["cores"][core]["systems"][system]["cfeatures"][cfeature]["description"]
+                                               featuresTxt += "            <feature name=\"{}\" value=\"{}\" description=\"{}\">\n".format(features[emulator]["cores"][core]["systems"][system]["cfeatures"][cfeature]["prompt"], cfeature, description)
+                                               for choice in features[emulator]["cores"][core]["systems"][system]["cfeatures"][cfeature]["choices"]:
+                                                   featuresTxt += "              <choice name=\"{}\" value=\"{}\" />\n".format(choice, features[emulator]["cores"][core]["systems"][system]["cfeatures"][cfeature]["choices"][choice])
+                                               featuresTxt += "            </feature>\n"
+                                           else:
+                                               print("skipping system " + emulator + "/" + system + " cfeature " + cfeature)
+                                   featuresTxt += "          </system>\n"
+                               featuresTxt += "        </systems>\n"
+                               ###
+                            featuresTxt += "      </core>\n"
+                        else:
+                            featuresTxt += "      <core name=\"{}\" features=\"{}\" />\n".format(core, core_featuresTxt)
                     featuresTxt += "    </cores>\n"
                 if "systems" in features[emulator]:
                     featuresTxt += "    <systems>\n"
@@ -267,20 +320,30 @@ class EsSystemConf:
                         featuresTxt += "      <system name=\"{}\" features=\"{}\" >\n".format(system, system_featuresTxt)
                         if "cfeatures" in features[emulator]["systems"][system]:
                             for cfeature in features[emulator]["systems"][system]["cfeatures"]:
-                                featuresTxt += "        <feature name=\"{}\" value=\"{}\">\n".format(features[emulator]["systems"][system]["cfeatures"][cfeature]["prompt"], cfeature)
-                                choices = OrderedDict(sorted(features[emulator]["systems"][system]["cfeatures"][cfeature]["choices"].items(), key=itemgetter(1)))
-                                for choice in choices:
-                                    featuresTxt += "        <choice name=\"{}\" value=\"{}\" />\n".format(choice, features[emulator]["systems"][system]["cfeatures"][cfeature]["choices"][choice])
-                                featuresTxt += "        </feature>\n"                        
+                                if "archs_include" not in features[emulator]["systems"][system]["cfeatures"][cfeature] or arch in features[emulator]["systems"][system]["cfeatures"][cfeature]["archs_include"]:
+                                    description = ""
+                                    if "description" in features[emulator]["systems"][system]["cfeatures"][cfeature]:
+                                        description = features[emulator]["systems"][system]["cfeatures"][cfeature]["description"]
+                                    featuresTxt += "        <feature name=\"{}\" value=\"{}\" description=\"{}\">\n".format(features[emulator]["systems"][system]["cfeatures"][cfeature]["prompt"], cfeature, description)
+                                    for choice in features[emulator]["systems"][system]["cfeatures"][cfeature]["choices"]:
+                                        featuresTxt += "        <choice name=\"{}\" value=\"{}\" />\n".format(choice, features[emulator]["systems"][system]["cfeatures"][cfeature]["choices"][choice])
+                                    featuresTxt += "        </feature>\n"
+                                else:
+                                    print("skipping system " + emulator + "/" + system + " cfeature " + cfeature)
                         featuresTxt += "      </system>\n"
                     featuresTxt += "    </systems>\n"
                 if "cfeatures" in features[emulator]:
                     for cfeature in features[emulator]["cfeatures"]:
-                        featuresTxt += "    <feature name=\"{}\" value=\"{}\">\n".format(features[emulator]["cfeatures"][cfeature]["prompt"], cfeature)
-                        choices = OrderedDict(sorted(features[emulator]["cfeatures"][cfeature]["choices"].items(), key=itemgetter(1)))
-                        for choice in choices:
-                            featuresTxt += "      <choice name=\"{}\" value=\"{}\" />\n".format(choice, features[emulator]["cfeatures"][cfeature]["choices"][choice])
-                        featuresTxt += "    </feature>\n"
+                        if "archs_include" not in features[emulator]["cfeatures"][cfeature] or arch in features[emulator]["cfeatures"][cfeature]["archs_include"]:
+                            description = ""
+                            if "description" in features[emulator]["cfeatures"][cfeature]:
+                                description = features[emulator]["cfeatures"][cfeature]["description"]
+                            featuresTxt += "    <feature name=\"{}\" value=\"{}\" description=\"{}\">\n".format(features[emulator]["cfeatures"][cfeature]["prompt"], cfeature, description)
+                            for choice in features[emulator]["cfeatures"][cfeature]["choices"]:
+                                featuresTxt += "      <choice name=\"{}\" value=\"{}\" />\n".format(choice, features[emulator]["cfeatures"][cfeature]["choices"][choice])
+                            featuresTxt += "    </feature>\n"
+                        else:
+                            print("skipping emulator " + emulator + " cfeature " + cfeature)
 
                 featuresTxt += "  </emulator>\n"
             else:
@@ -352,10 +415,18 @@ class EsSystemConf:
             coresTxt = ""
             for core in sorted(emulatorData):
                 if EsSystemConf.isValidRequirements(config, emulatorData[core]["requireAnyOf"]):
+                    incompatible_extensionsTxt = ""
+                    if "incompatible_extensions" in emulatorData[core]:
+                        for ext in emulatorData[core]["incompatible_extensions"]:
+                            if incompatible_extensionsTxt != "":
+                                incompatible_extensionsTxt += " "
+                            incompatible_extensionsTxt += "." + ext.lower()
+                        incompatible_extensionsTxt = " incompatible_extensions=\"" + incompatible_extensionsTxt + "\""
+
                     if emulator == defaultEmulator and core == defaultCore:
-                        coresTxt += "                    <core default=\"true\">%s</core>\n" % (core)
+                        coresTxt += "                    <core default=\"true\"%s>%s</core>\n" % (incompatible_extensionsTxt, core)
                     else:
-                        coresTxt += "                    <core>%s</core>\n" % (core)
+                        coresTxt += "                    <core%s>%s</core>\n" % (incompatible_extensionsTxt, core)
 
             if coresTxt == "":
                 emulatorTxt = ""
@@ -403,5 +474,6 @@ if __name__ == "__main__":
     parser.add_argument("gen_defaults_arch",   help="defaults configgen defaults")
     parser.add_argument("romsdirsource", help="emulationstation roms directory")
     parser.add_argument("romsdirtarget", help="emulationstation roms directory")
+    parser.add_argument("arch", help="arch")
     args = parser.parse_args()
-    EsSystemConf.generate(args.yml, args.features, args.config, args.es_systems, args.es_features, args.gen_defaults_global, args.gen_defaults_arch, args.romsdirsource, args.romsdirtarget)
+    EsSystemConf.generate(args.yml, args.features, args.config, args.es_systems, args.es_features, args.gen_defaults_global, args.gen_defaults_arch, args.romsdirsource, args.romsdirtarget, args.arch)

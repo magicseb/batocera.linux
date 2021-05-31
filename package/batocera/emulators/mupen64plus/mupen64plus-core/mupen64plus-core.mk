@@ -3,8 +3,8 @@
 # mupen64plus core
 #
 ################################################################################
-# Version.: Commits on May 25, 2020
-MUPEN64PLUS_CORE_VERSION = b7b56fea513e8734b982347d5b965c4a8e6f2074
+# Version.: Commits on Apr 12, 2021
+MUPEN64PLUS_CORE_VERSION = 4620384325cb92054902fa1d4b0fcdf16ff5abaa
 MUPEN64PLUS_CORE_SITE = $(call github,mupen64plus,mupen64plus-core,$(MUPEN64PLUS_CORE_VERSION))
 MUPEN64PLUS_CORE_LICENSE = GPLv2
 MUPEN64PLUS_CORE_DEPENDENCIES = sdl2 alsa-lib freetype dejavu
@@ -22,8 +22,8 @@ endif
 
 ifeq ($(BR2_PACKAGE_RPI_USERLAND),y)
 	MUPEN64PLUS_CORE_DEPENDENCIES += rpi-userland
-	MUPEN64PLUS_GL_LDLIBS += -lbcm_host
-	MUPEN64PLUS_PARAMS += VC=1
+	MUPEN64PLUS_GL_LDLIBS = -lbcm_host
+	MUPEN64PLUS_PARAMS = VC=1
 endif
 
 ifeq ($(BR2_arm),y)
@@ -40,18 +40,18 @@ ifeq ($(BR2_aarch64),y)
 	MUPEN64PLUS_PARAMS += VFP_HARD=1
 endif
 
-ifeq ($(BR2_ARM_CPU_HAS_NEON),y)
+ifeq ($(BR2_arm)$(BR2_ARM_CPU_HAS_NEON),yy)
 	MUPEN64PLUS_CORE_CPUFLAGS += -marm -DNO_ASM -DARM -D__arm__ -DARM_ASM -D__NEON_OPT -DNOSSE
 	MUPEN64PLUS_GL_CFLAGS += -D__ARM_NEON__ -D__NEON_OPT -ftree-vectorize -mvectorize-with-neon-quad -ftree-vectorizer-verbose=2 -funsafe-math-optimizations -fno-finite-math-only
 
 	ifeq ($(BR2_ARM_CPU_HAS_VFPV4),y)
-		MUPEN64PLUS_CORE_CPUFLAGS += -mfpu=neon-vfpv4 
+		MUPEN64PLUS_CORE_CPUFLAGS += -mfpu=neon-vfpv4
 	else
 		MUPEN64PLUS_CORE_CPUFLAGS += -mfpu=neon
 	endif
 
 	ifeq ($(BR2_GCC_TARGET_FLOAT_ABI),"hard")
-		MUPEN64PLUS_CORE_CPUFLAGS += -mfloat-abi=hard 
+		MUPEN64PLUS_CORE_CPUFLAGS += -mfloat-abi=hard
 	endif
 
 	MUPEN64PLUS_PARAMS += NEON=1 CPUFLAGS="$(MUPEN64PLUS_CORE_CPUFLAGS)"

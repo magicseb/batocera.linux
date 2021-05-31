@@ -3,16 +3,12 @@
 # LIBRETRO HANDY
 #
 ################################################################################
-# Version.: Commits on Jun 25, 2020
-LIBRETRO_HANDY_VERSION = e3ff0e9ede58cf08cc80a51eb030d1147a7cfa41
+# Version.: Commits on Mar 25, 2021
+LIBRETRO_HANDY_VERSION = 358f50b22a722427d5fe73a372e6a27c24ac5a8c
 LIBRETRO_HANDY_SITE = $(call github,libretro,libretro-handy,$(LIBRETRO_HANDY_VERSION))
 LIBRETRO_HANDY_LICENSE = Zlib
 
 LIBRETRO_HANDY_PLATFORM = $(LIBRETRO_PLATFORM)
-
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDGOA),y)
-	LIBRETRO_HANDY_PLATFORM = classic_armv8_a35
-endif
 
 define LIBRETRO_HANDY_BUILD_CMDS
 	$(TARGET_CONFIGURE_OPTS) $(MAKE) CXX="$(TARGET_CXX)" CC="$(TARGET_CC)" -C $(@D)/ -f Makefile platform="$(LIBRETRO_HANDY_PLATFORM)"

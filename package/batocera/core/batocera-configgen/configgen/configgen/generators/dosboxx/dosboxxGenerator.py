@@ -7,7 +7,7 @@ from os.path import dirname
 from os.path import isdir
 from os.path import isfile
 import glob
-import ConfigParser
+import configparser
 
 class DosBoxxGenerator(Generator):
 
@@ -22,7 +22,7 @@ class DosBoxxGenerator(Generator):
             configFile = gameConfFile
 
         # configuration file
-        iniSettings = ConfigParser.ConfigParser()
+        iniSettings = configparser.ConfigParser(interpolation=None)
         # To prevent ConfigParser from converting to lower case
         iniSettings.optionxform = str
 
@@ -51,4 +51,4 @@ class DosBoxxGenerator(Generator):
                         "-fastbioslogo",
                         "-conf {}".format(customConfFile)]
 
-        return Command.Command(array=commandArray)
+        return Command.Command(array=commandArray, env={"XDG_CONFIG_HOME":batoceraFiles.CONF})

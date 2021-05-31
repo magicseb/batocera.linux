@@ -1,11 +1,11 @@
 ################################################################################
 #
-# Hypseus is a fork of Daphne
+# Hypseus + Singe (a fork of Daphne)
 #
 ################################################################################
-# Version.: Commits on Mar 29, 2019
-DAPHNE_VERSION = 41fc33edaa8273cbf1ad807b57d8c2a7ae143351
-DAPHNE_SITE = https://github.com/btolab/hypseus.git
+# Version.: Commits on Apr 26, 2021
+DAPHNE_VERSION = v2.4.5
+DAPHNE_SITE = https://github.com/DirtBagXon/hypseus-singe
 DAPHNE_SITE_METHOD=git
 DAPHNE_LICENSE = GPLv3
 DAPHNE_DEPENDENCIES = sdl2 sdl2_image sdl2_ttf zlib libogg libvorbis libmpeg2
@@ -14,10 +14,20 @@ DAPHNE_DEPENDENCIES = sdl2 sdl2_image sdl2_ttf zlib libogg libvorbis libmpeg2
 DAPHNE_SUBDIR = build
 DAPHNE_CONF_OPTS = ../src -DBUILD_SHARED_LIBS=OFF
 
-define DAPHNE_HYPINPUT_LINK
+define DAPHNE_INSTALL_TARGET_CMDS
+	$(INSTALL) -D $(@D)/build/hypseus $(TARGET_DIR)/usr/bin/
+		mkdir -p $(TARGET_DIR)/usr/share/daphne
+
+	cp -pr $(@D)/pics \
+		$(TARGET_DIR)/usr/share/daphne
+
+	cp -pr $(@D)/fonts \
+		$(TARGET_DIR)/usr/share/daphne
+
+	cp -pr $(@D)/sound \
+		$(TARGET_DIR)/usr/share/daphne
+
 	ln -fs /userdata/system/configs/daphne/hypinput.ini $(TARGET_DIR)/usr/share/daphne/hypinput.ini
 endef
-
-DAPHNE_POST_INSTALL_TARGET_HOOKS = DAPHNE_HYPINPUT_LINK
 
 $(eval $(cmake-package))

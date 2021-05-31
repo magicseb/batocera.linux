@@ -3,8 +3,8 @@
 # batocera bezel
 #
 ################################################################################
-# Version.: Commits on Oct 19, 2020
-BATOCERA_BEZEL_VERSION = 76885ba1378e97172dec051eb336c7bea38720a6
+# Version.: Commits on Nov 10, 2020
+BATOCERA_BEZEL_VERSION = 8ce1ee89063ef698031d39e73a6eb82a4975e412
 BATOCERA_BEZEL_SITE = $(call github,batocera-linux,batocera-bezel,$(BATOCERA_BEZEL_VERSION))
 
 define BATOCERA_BEZEL_INSTALL_TARGET_CMDS
@@ -25,6 +25,9 @@ define BATOCERA_BEZEL_INSTALL_TARGET_CMDS
 		> $(TARGET_DIR)/usr/share/batocera/datainit/decorations/readme.txt
 	echo "https://batocera.org/wiki/doku.php?id=en:customize_decorations_bezels" \
 		>> $(TARGET_DIR)/usr/share/batocera/datainit/decorations/readme.txt
+	echo "You can put zip standalone bezels here too." \
+		>> $(TARGET_DIR)/usr/share/batocera/datainit/decorations/readme.txt
+
 endef
 
 $(eval $(generic-package))

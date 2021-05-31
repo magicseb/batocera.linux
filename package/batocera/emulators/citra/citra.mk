@@ -11,7 +11,7 @@ CITRA_GIT_SUBMODULES=YES
 CITRA_LICENSE = GPLv2
 
 # Use citra-android for AArch64 (SDL2 only)
-ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_ODROIDN2)$(BR2_PACKAGE_BATOCERA_TARGET_VIM3),y)
+ifeq ($(BR2_PACKAGE_BATOCERA_TARGET_S922X),y)
 CITRA_VERSION = dad2146e4e65980deb7d273bf1e9c58334847c19
 CITRA_SITE = https://github.com/citra-emu/citra-android.git
 CITRA_CONF_OPTS += -DENABLE_QT=OFF
@@ -42,8 +42,6 @@ define CITRA_INSTALL_TARGET_CMDS
         mkdir -p $(TARGET_DIR)/usr/lib
 	$(INSTALL) -D $(@D)/buildroot-build/bin/citra-qt \
 		$(TARGET_DIR)/usr/bin/
-	$(INSTALL) -D $(@D)/buildroot-build/bin/citra \
-		$(TARGET_DIR)/usr/bin/
 endef
 else
 define CITRA_INSTALL_TARGET_CMDS
@@ -54,5 +52,14 @@ define CITRA_INSTALL_TARGET_CMDS
 		$(TARGET_DIR)/usr/bin/
 endef
 endif
+
+define CITRA_EVMAP
+	mkdir -p $(TARGET_DIR)/usr/share/evmapy
+	
+	cp -prn $(BR2_EXTERNAL_BATOCERA_PATH)/package/batocera/emulators/citra/3ds.citra.keys \
+		$(TARGET_DIR)/usr/share/evmapy
+endef
+
+CITRA_POST_INSTALL_TARGET_HOOKS = CITRA_EVMAP
 
 $(eval $(cmake-package))

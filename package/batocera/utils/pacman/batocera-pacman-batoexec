@@ -4,14 +4,15 @@
 # @lbrpdx on Batocera Discord
 #
 # 20200528 - Initial revision (support for 'gamelist' and 'exec')
+# 20210521 - Support for multi-Batoexecs and better string escaping
 #
 import os
 import sys
 import re
 import subprocess
-import httplib
+import httplib2
 import xml.etree.ElementTree as ET
-ES_SERVER="127.0.0.1:1234"
+ES_SERVER="http://127.0.0.1:1234"
 
 ########
 # Parse the command file BATOEXEC
@@ -36,8 +37,8 @@ def gamelist_xml_es(system, data, mode):
         return (1)
     try:
         tree = ET.ElementTree(ET.fromstring(data))
-    except:
-        print ("ERROR: bad XML format in " + BATOEXEC)
+    except Exception as e:
+        print ("ERROR: bad XML format in {} ({})".format(BATOEXEC, e))
         return (1)
     # check new tree syntax (to avoid adding garbage)
     newroot = tree.getroot()
@@ -51,22 +52,21 @@ def gamelist_xml_es(system, data, mode):
     headers = {"Content-type": "application/x-www-form-urlencoded",\
                "Accept": "text/plain"}
     try:
-        cnx=httplib.HTTPConnection(ES_SERVER)
-    except:
-        print ("ERROR: Is EmulationStation running? Impossible to connect to " + ES_SERVER)
+        cnx=httplib2.Http()
+        resp, content = cnx.request(ES_SERVER)
+    except Exception as e:
+        print ("ERROR: Is EmulationStation running? Impossible to connect to {} ({})".format(ES_SERVER, e))
         return (1)
     try:
         if (mode in 'install'):
-            cnx.request("POST", "/addgames/" + str(system).strip(), body=body, headers=headers)
+            res, rout = cnx.request(ES_SERVER + "/addgames/" + str(system).strip(), method="POST", body=body, headers=headers)
         elif (mode in 'uninstall'):
-            cnx.request("POST", "/removegames/" + str(system).strip(), body=body, headers=headers)
-        res=cnx.getresponse()
-        rout=res.read()
+            res, rout = cnx.request(ES_SERVER + "/removegames/" + str(system).strip(), method="POST", body=body, headers=headers)
         if (res.status != 200):
             print ("WARNING: ES responded with #{} [{}] {}".format( \
                     res.status, res.reason, rout))
-    except:
-        print ("ERROR: Impossible to access ES service endpoints through " + ES_SERVER)
+    except Exception as e:
+        print ("ERROR: Impossible to access ES service endpoints through {}: {} ".format(ES_SERVER, e))
         return (1)
     return (0)
 
@@ -87,19 +87,20 @@ def exec_cmd(base_cmd, data, mode):
             data = re.sub("\.UNINSTALL_START", "", data)
             data = re.sub("\.UNINSTALL_END", "", data)
         clist = data.split('\n')
+        clist = [sub.replace('"', '\\"') for sub in clist]
+        clist = [sub.replace("'", "\\'") for sub in clist]
         for el in clist:
             if str(el).strip() == '':
                 clist.remove(el)
-            el = re.sub('"', '\"', el)
         datastr = ';'.join([str(el) for el in clist])
         datastr = re.sub(";{2,}", ';', datastr)
-        cmd_line = [ base_cmd + ' -c "' + datastr + '"' ]
+        cmd_line = [ f"""{base_cmd} -c " {datastr} " """ ]
     else:
         cmd_line = [ base_cmd ]
     try:
         subprocess.check_output(cmd_line[0], shell=True)
-    except:
-        print ("ERROR: " + BATOEXEC + " could not fork "+base_cmd)
+    except Exception as e:
+        print ("ERROR: {} could not fork {} ({})".format(BATOEXEC, base_cmd, e))
         return (1)
     # Not sure if we want to return the return code of the script
     # This might lead to unwanted error cases from Batoexec

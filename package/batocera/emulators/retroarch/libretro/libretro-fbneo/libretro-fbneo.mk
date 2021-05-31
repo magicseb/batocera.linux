@@ -3,13 +3,13 @@
 # FBNEO
 #
 ################################################################################
-# Version.: Commits on Aug 31, 2020
-LIBRETRO_FBNEO_VERSION = fc410f664ad5222993f18f1d3a413057e3a1ca83
+# Version.: Commits on Apr 05, 2021
+LIBRETRO_FBNEO_VERSION = 538a48feced95413c6a992084087f72da1f2f86e
 LIBRETRO_FBNEO_SITE = $(call github,libretro,FBNeo,$(LIBRETRO_FBNEO_VERSION))
 LIBRETRO_FBNEO_LICENSE = Non-commercial
 
 ifeq ($(BR2_ARM_FPU_NEON_VFPV4)$(BR2_ARM_FPU_NEON)$(BR2_ARM_FPU_NEON_FP_ARMV8),y)
-    LIBRETRO_FBNEO_EXTRA_ARGS = HAVE_NEON=1 profile=performance
+    LIBRETRO_FBNEO_EXTRA_ARGS = HAVE_NEON=1 USE_CYCLONE=1
 else
     LIBRETRO_FBNEO_EXTRA_ARGS = HAVE_NEON=0 profile=accuracy
 endif

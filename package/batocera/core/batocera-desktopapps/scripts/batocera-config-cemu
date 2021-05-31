@@ -5,13 +5,12 @@ then
     export DISPLAY=:0.0
 fi
 
-if test -e /userdata/system/configs/cemu/settings.xml
-then
-    cp /userdata/system/configs/cemu/settings.xml /usr/cemu/setings.xml || exit 1
-fi
-WINEPREFIX=/userdata/saves/cemu wine /usr/cemu/Cemu.exe -m z:/userdata/saves/cemu
-if test -e /usr/cemu/setings.xml
-then
-    cp /usr/cemu/setings.xml /userdata/system/configs/cemu/settings.xml || exit 1
-fi
+export mesa_glthread=true
+export __GL_THREADED_OPTIMIZATIONS=1
+export vblank_mode=0
+export WINEDLLOVERRIDES="mscoree=;mshtml=;dbghelp.dll=n,b"
+export WINEPREFIX=/userdata/saves/cemu
+
+/usr/wine/lutris/bin/wine64 /userdata/system/configs/cemu/Cemu.exe
+
 exit 0
